@@ -2,5 +2,7 @@
  - hosts: localhost
    become: yes
    tasks:
-   - name: test sameple commands
-     command: hostname -i
+   - name: create new file
+     file:
+       path: /ansibletest.txt
+       state: touch
