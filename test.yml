@@ -1,5 +1,5 @@
 ---
- - hosts: 3.80.149.187
+ - hosts: localhost
    become: yes
    tasks:
    - name: test sameple commands
