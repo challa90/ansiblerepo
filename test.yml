@@ -1,0 +1,6 @@
+---
+ - hosts: 3.80.149.187
+   become: yes
+   tasks:
+   - name: test sameple commands
+     command: hostname -i
