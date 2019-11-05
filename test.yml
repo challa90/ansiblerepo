@@ -1,5 +1,5 @@
 ---
- - hosts: all
+ - hosts: 52.91.188.157
    become: yes
    tasks:
    - name: create new file
