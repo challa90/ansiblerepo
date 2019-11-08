@@ -1,5 +1,5 @@
 ---
- - hosts: 52.91.188.157
+ - hosts: localhost
    become: yes
    tasks:
    - name: create new file
