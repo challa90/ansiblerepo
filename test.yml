@@ -1,5 +1,5 @@
 ---
- - hosts: {{group1}}
+ - hosts: group1
    tasks:
    - name: create new file
      file:
