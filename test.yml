@@ -3,5 +3,5 @@
    tasks:
    - name: create new file
      file:
-       path: /ansibletest.txt
+       path: ~/ansibletest.txt
        state: touch
