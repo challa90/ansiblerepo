@@ -1,0 +1,80 @@
+---
+- name: install tomcat server
+  hosts: all
+  become: yes
+  vars_prompt:
+    name: x
+    prompt: enter tomcat server version
+    private: no
+  vars:
+    url: http://apachemirror.wuchna.com/tomcat/tomcat-7/v7.0.99/bin/apache-tomcat-7.0.99.tar.gz
+  tasks:
+  - name: check java version
+    command: java -version
+    ignore_errors: yes
+  - name: install java latest
+    yum:
+      name: java
+      state: present
+    tags: java
+    # if alrady install skip the installation use tags
+  - command: java -version
+    tags: java version
+  - name: jdk path set (or) environment variables set
+    lineinfile:
+      dest: /root/.bashrc
+      line: "{{item}}"
+    with_items:
+      - 'export JAVA_HOME="/usr/lib/jvm/jre-11-openjdk"'
+      - 'export PATH=$JAVA_HOME/bin:$PATH'
+    tags: environment
+  - name: downlode tomcat server varsion={{x}}
+    get_url:
+      url: "{{url}}"
+      dest: /opt
+      remote_src: yes
+  - name: extract tar file
+    unarchive:
+      src: /opt/apache-tomcat-7.0.99.tar.gz
+      dest: /opt
+      remote_src: yes
+  - name: rename file
+    command: mv /opt/apache-tomcat-7.0.99 /opt/tomcat7
+    ignore_errors: yes
+  - name: start tomcat server
+    command: sh /opt/tomcat7/bin/startup.sh
+  - name: change tomcat server port number
+    replace:
+      dest: /opt/tomcat7/conf/server.xml
+      regexp: '<Connector port="8080" protocol="HTTP/1.1"'
+      replace: '<Connector port="8089" protocol="HTTP/1.1"'
+      backup: yes
+    notify:
+    - restart tomcat
+  - name: add user in server.xml file
+    lineinfile:
+      dest: /opt/tomcat7/conf/tomcat-users.xml
+      insertbefore: '</tomcat-users>'
+      line: "{{item}}"
+    with_items:
+      - '<role rolename="manager-gui"/>'
+      - '<user username="tomcat2" password="tomcat2" roles="manager-gui"/>'
+    notify:
+    - restart tomcat
+  - name: deploy war file ino tomcat server
+    shell: ls /var/lib/jenkins/workspace/deploy/target | grep .war
+    #delegate_to module is used to perfarm action in specific server
+    delegate_to: localhost
+    register: output
+  - name: deploy artifactory into tomat server
+    copy:
+      src: "/var/lib/jenkins/workspace/deploy/target/{{output.stdout}}"
+      dest: /opt/tomcat7/webapps
+    notify:
+    - restart tomcat
+  handlers:
+    - name: restart tomcat
+      command: "{{item}}"
+      with_items:
+        - 'sh /opt/tomcat7/bin/shutdown.sh'
+        - 'sh /opt/tomcat7/bin/startup.sh'
